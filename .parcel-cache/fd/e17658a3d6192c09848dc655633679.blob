@@ -1,0 +1,30 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "User", function () {
+  return User;
+});
+var _axios = require('axios');
+var _axiosDefault = _parcelHelpers.interopDefault(_axios);
+class User {
+  constructor(data) {
+    this.data = data;
+  }
+  get = propName => {
+    return this.data[propName];
+  };
+  set = update => {
+    Object.assign(this.data, update);
+  };
+  fetch = async () => {
+    let res = await _axiosDefault.default.get(`http://localhost:3000/users/${this.get('id')}`);
+    this.set(res.data);
+  };
+  save = () => {
+    const id = this.get('id');
+    if (this.get('id')) {
+      _axiosDefault.default.put(`http://localhost:3000/users/${this.get('id')}`, this.data);
+    } else {
+      _axiosDefault.default.post('http://localhost:3000/users', this.data);
+    }
+  };
+}

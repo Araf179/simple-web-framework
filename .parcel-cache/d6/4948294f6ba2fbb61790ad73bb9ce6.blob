@@ -1,0 +1,7 @@
+var _modelsUser = require('./models/User');
+const user = new _modelsUser.User({
+  id: 1
+});
+setTimeout(() => {
+  console.log(user);
+}, 4000);

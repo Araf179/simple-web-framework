@@ -1,0 +1,7 @@
+var _modelsUser = require('./models/User');
+const user = new _modelsUser.User({});
+user.set({
+  name: 'newname'
+});
+console.log(user.get('name'));
+console.log(user.get('age'));

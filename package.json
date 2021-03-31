@@ -1,0 +1,16 @@
+{
+  "name": "microjs",
+  "version": "1.0.0",
+  "description": "Web framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "state:db": "json-server -w db.json",
+    "start:parcel": "parcel index.html"
+  },
+  "author": "Araf",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
