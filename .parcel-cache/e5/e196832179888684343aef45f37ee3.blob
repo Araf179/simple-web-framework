@@ -1,0 +1,39 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "Model", function () {
+  return Model;
+});
+class Model {
+  constructor(attributes, events, sync) {
+    this.attributes = attributes;
+    this.events = events;
+    this.sync = sync;
+  }
+  on = this.events.on;
+  get trigger() {
+    return this.events.trigger;
+  }
+  get get() {
+    return this.attributes.get;
+  }
+  set = update => {
+    this.attributes.set(update);
+    this.events.trigger('change');
+  };
+  fetch = async () => {
+    const id = this.attributes.get('id');
+    if (typeof id !== 'number') {
+      throw new Error('Cannot fetch without an id');
+    }
+    let res = await this.sync.fetch(id);
+    this.set(res.data);
+  };
+  save = async () => {
+    try {
+      let res = await this.sync.save(this.attributes.getAll());
+      this.trigger('save');
+    } catch (err) {
+      this.trigger('error');
+    }
+  };
+}

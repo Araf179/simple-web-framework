@@ -1,0 +1,10 @@
+var _modelsUser = require('./models/User');
+const user = new _modelsUser.User({
+  id: 1,
+  name: 'Newername',
+  age: 0
+});
+user.on('save', () => {
+  console.log(user);
+});
+user.save();

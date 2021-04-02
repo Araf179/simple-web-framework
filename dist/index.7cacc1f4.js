@@ -443,13 +443,11 @@ id) /*: string*/
 
 },{}],"3rfh7":[function(require,module,exports) {
 var _modelsUser = require('./models/User');
-const user = new _modelsUser.User({
-  name: 'New record'
+const collection = _modelsUser.User.buildUserCollection();
+collection.on('change', () => {
+  console.log(collection);
 });
-user.events.on('change', () => {
-  console.log("change!");
-});
-user.events.trigger('change');
+collection.fetch();
 
 },{"./models/User":"5y4Kz"}],"5y4Kz":[function(require,module,exports) {
 var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
@@ -457,35 +455,66 @@ _parcelHelpers.defineInteropFlag(exports);
 _parcelHelpers.export(exports, "User", function () {
   return User;
 });
+var _Model = require('./Model');
+var _Attributes = require('./Attributes');
+var _ApiSync = require('./ApiSync');
 var _Eventing = require('./Eventing');
-var _axios = require('axios');
-var _axiosDefault = _parcelHelpers.interopDefault(_axios);
-class User {
-  events = new _Eventing.Eventing();
-  constructor(data) {
-    this.data = data;
+var _Collection = require('./Collection');
+const rootUrl = 'http://localhost:3000/users';
+class User extends _Model.Model {
+  static buildUser(attrs) {
+    return new User(new _Attributes.Attributes(attrs), new _Eventing.Eventing(), new _ApiSync.ApiSync(rootUrl));
   }
-  get = propName => {
-    return this.data[propName];
-  };
+  static buildUserCollection() {
+    return new _Collection.Collection(rootUrl, json => User.buildUser(json));
+  }
+}
+
+},{"./Model":"423Hi","./Attributes":"2VzYh","./ApiSync":"3hbnv","./Eventing":"4MHiY","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT","./Collection":"2s8AK"}],"423Hi":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "Model", function () {
+  return Model;
+});
+class Model {
+  constructor(attributes, events, sync) {
+    this.attributes = attributes;
+    this.events = events;
+    this.sync = sync;
+  }
+  get on() {
+    // return a reference to this.events.on
+    return this.events.on;
+  }
+  get trigger() {
+    return this.events.trigger;
+  }
+  get get() {
+    return this.attributes.get;
+  }
   set = update => {
-    Object.assign(this.data, update);
+    this.attributes.set(update);
+    this.events.trigger('change');
   };
   fetch = async () => {
-    let res = await _axiosDefault.default.get(`http://localhost:3000/users/${this.get('id')}`);
+    const id = this.attributes.get('id');
+    if (typeof id !== 'number') {
+      throw new Error('Cannot fetch without an id');
+    }
+    let res = await this.sync.fetch(id);
     this.set(res.data);
   };
-  save = () => {
-    const id = this.get('id');
-    if (this.get('id')) {
-      _axiosDefault.default.put(`http://localhost:3000/users/${this.get('id')}`, this.data);
-    } else {
-      _axiosDefault.default.post('http://localhost:3000/users', this.data);
+  save = async () => {
+    try {
+      let res = await this.sync.save(this.attributes.getAll());
+      this.trigger('save');
+    } catch (err) {
+      this.trigger('error');
     }
   };
 }
 
-},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT","axios":"7rA65","./Eventing":"4MHiY"}],"7kyIT":[function(require,module,exports) {
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"7kyIT":[function(require,module,exports) {
 "use strict";
 
 exports.interopDefault = function (a) {
@@ -527,7 +556,55 @@ exports.export = function (dest, destName, get) {
     get: get
   });
 };
-},{}],"7rA65":[function(require,module,exports) {
+},{}],"2VzYh":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "Attributes", function () {
+  return Attributes;
+});
+class Attributes {
+  constructor(data) {
+    this.data = data;
+  }
+  /*K can only ever be strings of 1 of the types in T*/
+  /*constraint limiting the types we can send in as a parameter*/
+  get = key => {
+    return this.data[key];
+  };
+  set = update => {
+    Object.assign(this.data, update);
+  };
+  getAll = () => {
+    return this.data;
+  };
+}
+
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"3hbnv":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "ApiSync", function () {
+  return ApiSync;
+});
+var _axios = require('axios');
+var _axiosDefault = _parcelHelpers.interopDefault(_axios);
+class ApiSync {
+  constructor(rootUrl) {
+    this.rootUrl = rootUrl;
+  }
+  fetch = id => {
+    return _axiosDefault.default.get(`${this.rootUrl}/${id}`);
+  };
+  save = data => {
+    const {id} = data;
+    if (id) {
+      return _axiosDefault.default.put(`${this.rootUrl}/${id}`, data);
+    } else {
+      return _axiosDefault.default.post(this.rootUrl, data);
+    }
+  };
+}
+
+},{"axios":"7rA65","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"7rA65":[function(require,module,exports) {
 module.exports = require('./lib/axios');
 },{"./lib/axios":"4qfhW"}],"4qfhW":[function(require,module,exports) {
 'use strict';
@@ -2294,6 +2371,37 @@ class Eventing {
   };
 }
 
-},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}]},["4UKJc","3rfh7"], "3rfh7", "parcelRequire0d99")
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"2s8AK":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "Collection", function () {
+  return Collection;
+});
+var _Eventing = require('./Eventing');
+var _axios = require('axios');
+var _axiosDefault = _parcelHelpers.interopDefault(_axios);
+class Collection {
+  models = [];
+  events = new _Eventing.Eventing();
+  constructor(rootUrl, deserialize) {
+    this.rootUrl = rootUrl;
+    this.deserialize = deserialize;
+  }
+  get on() {
+    return this.events.on;
+  }
+  get trigger() {
+    return this.events.trigger;
+  }
+  fetch = async () => {
+    let res = await _axiosDefault.default.get(this.rootUrl);
+    res.data.forEach(value => {
+      this.models.push(this.deserialize(value));
+    });
+    this.trigger("change");
+  };
+}
+
+},{"./Eventing":"4MHiY","axios":"7rA65","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}]},["4UKJc","3rfh7"], "3rfh7", "parcelRequire0d99")
 
 //# sourceMappingURL=index.7cacc1f4.js.map

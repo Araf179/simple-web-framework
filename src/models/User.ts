@@ -1,37 +1,30 @@
+import { Model } from './Model';
+import { Attributes } from './Attributes';
+import { ApiSync } from './ApiSync';
 import {Eventing} from './Eventing';
-import axios, {AxiosResponse} from 'axios';
+import { Collection } from './Collection';
 
-
-interface UserProps {
+export interface UserProps {
     id?: number;
     name?: string;
     age?: number;
 }
 
-export class User {
-    public events: Eventing = new Eventing();
-    constructor(private data: UserProps){}
+const rootUrl = 'http://localhost:3000/users'
 
-    get = (propName: string): (number | string) => {
-        return this.data[propName];
+export class User extends Model<UserProps>{
+    static buildUser(attrs: UserProps): User {
+        return new User(
+            new Attributes<UserProps>(attrs),
+            new Eventing(),
+            new ApiSync<UserProps>(rootUrl)
+        );
     }
 
-    set = (update: UserProps): void => {
-        Object.assign(this.data, update)
-    }
-
-    fetch = async (): Promise<void> => {
-        let res = await axios.get(`http://localhost:3000/users/${this.get('id')}`)
-        this.set(res.data);
- 
-    }
-
-    save = (): void => {
-        const id = this.get('id')
-        if(this.get('id')){
-            axios.put(`http://localhost:3000/users/${this.get('id')}`, this.data)
-        }else{
-            axios.post('http://localhost:3000/users', this.data);
-        }
+    static buildUserCollection(): Collection<User, UserProps>{
+        return new Collection<User, UserProps>(
+            rootUrl,
+            (json: UserProps) => User.buildUser(json)
+            );
     }
 }

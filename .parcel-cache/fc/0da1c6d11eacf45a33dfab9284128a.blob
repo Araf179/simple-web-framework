@@ -1,0 +1,7 @@
+var _modelsUser = require('./models/User');
+var _modelsCollection = require('./models/Collection');
+const collection = new _modelsCollection.Collection('http://localhost:3000/users', json => _modelsUser.User.buildUser(json));
+collection.on('change', () => {
+  console.log(collection);
+});
+collection.fetch();
