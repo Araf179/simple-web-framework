@@ -1,10 +1,11 @@
-import {User, UserProps} from './models/User';
-import { Collection } from './models/Collection';
+import { UserForm } from './views/UserForm';
+import { User } from './models/User';
 
-const collection = User.buildUserCollection();
+const user = User.buildUser({name: "SomedummyData", age: 27});
 
-collection.on('change', () => {
-    console.log(collection);
-})
+const userForm = new UserForm(
+    document.getElementById('root'),
+    user
+)
 
-collection.fetch();
+userForm.render();

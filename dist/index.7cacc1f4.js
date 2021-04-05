@@ -442,76 +442,106 @@ id) /*: string*/
 }
 
 },{}],"3rfh7":[function(require,module,exports) {
+var _viewsUserForm = require('./views/UserForm');
 var _modelsUser = require('./models/User');
-const collection = _modelsUser.User.buildUserCollection();
-collection.on('change', () => {
-  console.log(collection);
+const user = _modelsUser.User.buildUser({
+  name: "SomedummyData",
+  age: 27
 });
-collection.fetch();
+const userForm = new _viewsUserForm.UserForm(document.getElementById('root'), user);
+userForm.render();
 
-},{"./models/User":"5y4Kz"}],"5y4Kz":[function(require,module,exports) {
+},{"./views/UserForm":"77ALS","./models/User":"5y4Kz"}],"77ALS":[function(require,module,exports) {
 var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
 _parcelHelpers.defineInteropFlag(exports);
-_parcelHelpers.export(exports, "User", function () {
-  return User;
+_parcelHelpers.export(exports, "UserForm", function () {
+  return UserForm;
 });
-var _Model = require('./Model');
-var _Attributes = require('./Attributes');
-var _ApiSync = require('./ApiSync');
-var _Eventing = require('./Eventing');
-var _Collection = require('./Collection');
-const rootUrl = 'http://localhost:3000/users';
-class User extends _Model.Model {
-  static buildUser(attrs) {
-    return new User(new _Attributes.Attributes(attrs), new _Eventing.Eventing(), new _ApiSync.ApiSync(rootUrl));
-  }
-  static buildUserCollection() {
-    return new _Collection.Collection(rootUrl, json => User.buildUser(json));
+var _View = require('./View');
+class UserForm extends _View.View {
+  eventsMap = () => {
+    return {
+      'click:.set-age': this.onSetAgeClick,
+      'click:.set-name': this.onSetNameClick,
+      'click:.save-model': this.onSaveClick
+    };
+  };
+  onSaveClick = () => {
+    this.model.save();
+  };
+  onSetNameClick = () => {
+    const input = this.parent.querySelector('input');
+    const name = input.value;
+    // this.model is going to refer to User class
+    this.model.set({
+      name
+    });
+  };
+  onSetAgeClick = () => {
+    this.model.setRandomAge();
+  };
+  template() {
+    return `
+        <div>
+            <h1>Details Screen</h1>
+            <h2>Name: ${this.model.get('name')}<h2>
+            <h3>Age: ${this.model.get('age')}</h3>
+            <input placeholder="${this.model.get('name')}"/>
+            <button class="set-name">Click Me</button>
+            <button class="set-age">Set random age</button>
+            <button class="save-model">Save User</button>
+        </div>
+        `;
   }
 }
 
-},{"./Model":"423Hi","./Attributes":"2VzYh","./ApiSync":"3hbnv","./Eventing":"4MHiY","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT","./Collection":"2s8AK"}],"423Hi":[function(require,module,exports) {
+},{"./View":"6m94r","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"6m94r":[function(require,module,exports) {
 var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
 _parcelHelpers.defineInteropFlag(exports);
-_parcelHelpers.export(exports, "Model", function () {
-  return Model;
+_parcelHelpers.export(exports, "View", function () {
+  return View;
 });
-class Model {
-  constructor(attributes, events, sync) {
-    this.attributes = attributes;
-    this.events = events;
-    this.sync = sync;
+class View {
+  regions = {};
+  constructor(parent, model) {
+    this.parent = parent;
+    this.model = model;
+    this.bindModel();
   }
-  get on() {
-    // return a reference to this.events.on
-    return this.events.on;
-  }
-  get trigger() {
-    return this.events.trigger;
-  }
-  get get() {
-    return this.attributes.get;
-  }
-  set = update => {
-    this.attributes.set(update);
-    this.events.trigger('change');
+  regionsMap = () => {
+    return {};
   };
-  fetch = async () => {
-    const id = this.attributes.get('id');
-    if (typeof id !== 'number') {
-      throw new Error('Cannot fetch without an id');
-    }
-    let res = await this.sync.fetch(id);
-    this.set(res.data);
+  bindModel = () => {
+    this.model.on('change', () => {
+      this.render();
+    });
   };
-  save = async () => {
-    try {
-      let res = await this.sync.save(this.attributes.getAll());
-      this.trigger('save');
-    } catch (err) {
-      this.trigger('error');
+  bindEvents = fragment => {
+    const eventsMap = this.eventsMap();
+    for (let eventKey in eventsMap) {
+      const [eventName, selector] = eventKey.split(':');
+      fragment.querySelectorAll(selector).forEach(element => {
+        element.addEventListener(eventName, eventsMap[eventKey]);
+      });
     }
   };
+  mapRegions = fragment => {
+    const regionsMap = this.regionsMap();
+    for (let key in regionsMap) {
+      const selector = regionsMap[key];
+      this.regions[key] = fragment.querySelector(selector);
+    }
+  };
+  onRender = () => {};
+  render() {
+    this.parent.innerHTML = '';
+    const templateElement = document.createElement('template');
+    templateElement.innerHTML = this.template();
+    this.bindEvents(templateElement.content);
+    this.mapRegions(templateElement.content);
+    this.onRender();
+    this.parent.append(templateElement.content);
+  }
 }
 
 },{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"7kyIT":[function(require,module,exports) {
@@ -556,7 +586,78 @@ exports.export = function (dest, destName, get) {
     get: get
   });
 };
-},{}],"2VzYh":[function(require,module,exports) {
+},{}],"5y4Kz":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "User", function () {
+  return User;
+});
+var _Model = require('./Model');
+var _Attributes = require('./Attributes');
+var _ApiSync = require('./ApiSync');
+var _Eventing = require('./Eventing');
+var _Collection = require('./Collection');
+const rootUrl = 'http://localhost:3000/users';
+class User extends _Model.Model {
+  static buildUser(attrs) {
+    return new User(new _Attributes.Attributes(attrs), new _Eventing.Eventing(), new _ApiSync.ApiSync(rootUrl));
+  }
+  static buildUserCollection() {
+    return new _Collection.Collection(rootUrl, json => User.buildUser(json));
+  }
+  setRandomAge() {
+    const age = Math.round(Math.random() * 100);
+    this.set({
+      age
+    });
+  }
+}
+
+},{"./Model":"423Hi","./Attributes":"2VzYh","./ApiSync":"3hbnv","./Eventing":"4MHiY","./Collection":"2s8AK","@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"423Hi":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "Model", function () {
+  return Model;
+});
+class Model {
+  constructor(attributes, events, sync) {
+    this.attributes = attributes;
+    this.events = events;
+    this.sync = sync;
+  }
+  get on() {
+    // return a reference to this.events.on
+    return this.events.on;
+  }
+  get trigger() {
+    return this.events.trigger;
+  }
+  get get() {
+    return this.attributes.get;
+  }
+  set = update => {
+    this.attributes.set(update);
+    this.events.trigger('change');
+  };
+  fetch = async () => {
+    const id = this.attributes.get('id');
+    if (typeof id !== 'number') {
+      throw new Error('Cannot fetch without an id');
+    }
+    let res = await this.sync.fetch(id);
+    this.set(res.data);
+  };
+  save = async () => {
+    try {
+      let res = await this.sync.save(this.attributes.getAll());
+      this.trigger('save');
+    } catch (err) {
+      this.trigger('error');
+    }
+  };
+}
+
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"7kyIT"}],"2VzYh":[function(require,module,exports) {
 var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
 _parcelHelpers.defineInteropFlag(exports);
 _parcelHelpers.export(exports, "Attributes", function () {

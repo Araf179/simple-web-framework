@@ -1,9 +1,0 @@
-var _modelsUser = require('./models/User');
-const user = new _modelsUser.User({
-  id: 1
-});
-console.log(user.get('name'));
-user.on('change', () => {
-  console.log(user);
-});
-user.fetch();
