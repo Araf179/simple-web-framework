@@ -20,6 +20,7 @@ export class UserForm extends View<User, UserProps> {
         const name = input.value;
         //this.model is going to refer to User class
         this.model.set({name});
+        
     }
 
     onSetAgeClick = (): void => {
@@ -33,7 +34,7 @@ export class UserForm extends View<User, UserProps> {
             <h2>Name: ${this.model.get('name')}<h2>
             <h3>Age: ${this.model.get('age')}</h3>
             <input placeholder="${this.model.get('name')}"/>
-            <button class="set-name">Click Me</button>
+            <button class="set-name">Set Name</button>
             <button class="set-age">Set random age</button>
             <button class="save-model">Save User</button>
         </div>

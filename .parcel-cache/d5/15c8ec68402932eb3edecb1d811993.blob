@@ -1,0 +1,42 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "UserForm", function () {
+  return UserForm;
+});
+var _View = require('./View');
+class UserForm extends _View.View {
+  eventsMap = () => {
+    return {
+      'click:.set-age': this.onSetAgeClick,
+      'click:.set-name': this.onSetNameClick,
+      'click:.save-model': this.onSaveClick
+    };
+  };
+  onSaveClick = () => {
+    this.model.save();
+  };
+  onSetNameClick = () => {
+    const input = this.parent.querySelector('input');
+    const name = input.value;
+    // this.model is going to refer to User class
+    this.model.set({
+      name
+    });
+  };
+  onSetAgeClick = () => {
+    this.model.setRandomAge();
+  };
+  template() {
+    return `
+        <div>
+            <h1>Details Screen</h1>
+            <h2>Name: ${this.model.get('name')}<h2>
+            <h3>Age: ${this.model.get('age')}</h3>
+            <input placeholder="${this.model.get('name')}"/>
+            <button class="set-name">Set Name</button>
+            <button class="set-age">Set random age</button>
+            <button class="save-model">Save User</button>
+        </div>
+        `;
+  }
+}
